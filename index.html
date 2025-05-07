@@ -1,0 +1,222 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tralalero Blast!</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #222, #333);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+    h1 {
+      margin: 20px 0;
+      font-size: 2.5em;
+      color: #f7d51d;
+      text-shadow: 2px 2px 5px black;
+    }
+    #game {
+      display: flex;
+      gap: 50px;
+      margin-top: 20px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, 40px);
+      grid-template-rows: repeat(8, 40px);
+      gap: 2px;
+      background-color: #444;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      background-color: #222;
+      border-radius: 6px;
+      box-shadow: inset 0 0 5px #000;
+    }
+    .highlight {
+      background-color: #666 !important;
+    }
+    #pieces {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .piece {
+      display: grid;
+      grid-auto-flow: row;
+      gap: 2px;
+      cursor: grab;
+    }
+    .block {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      box-shadow: 1px 1px 3px #000;
+    }
+    #score {
+      margin-top: 20px;
+      font-size: 1.5em;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tralalero Blast!</h1>
+  <div id="score">Score: 0</div>
+  <div id="game">
+    <div id="board"></div>
+    <div id="pieces"></div>
+  </div>  <script>
+    const board = document.getElementById("board");
+    const pieces = document.getElementById("pieces");
+    const scoreDisplay = document.getElementById("score");
+    const boardState = Array.from({ length: 8 }, () => Array(8).fill(null));
+    let score = 0;
+    let draggedPiece = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    const colors = ["#f94144", "#f3722c", "#f9c74f", "#90be6d", "#577590"];
+
+    const pieceShapes = [
+      [[1, 1], [1, 1]], // square 2x2
+      [[1, 1, 1, 1]], // horizontal line 4
+      [[1], [1], [1], [1]], // vertical line 4
+      [[1, 0], [1, 0], [1, 1]], // L shape
+      [[1, 1, 1, 1, 1]] // horizontal line 5
+    ];
+
+    function createBoard() {
+      for (let i = 0; i < 8 * 8; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = i;
+        board.appendChild(cell);
+      }
+    }
+
+    function createPiece(shape = randomShape()) {
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const piece = document.createElement("div");
+      piece.className = "piece";
+      piece.dataset.color = color;
+      piece.style.gridTemplateColumns = `repeat(${shape[0].length}, 40px)`;
+      shape.forEach(row => {
+        row.forEach(cell => {
+          const block = document.createElement("div");
+          block.className = "block";
+          block.style.backgroundColor = cell ? color : "transparent";
+          piece.appendChild(block);
+        });
+      });
+
+      piece.shape = shape;
+
+      piece.addEventListener("dragstart", (e) => {
+        draggedPiece = piece;
+        dragOffset.x = e.offsetX;
+        dragOffset.y = e.offsetY;
+      });
+
+      piece.draggable = true;
+      return piece;
+    }
+
+    function randomShape() {
+      return pieceShapes[Math.floor(Math.random() * pieceShapes.length)];
+    }
+
+    function generatePieces() {
+      pieces.innerHTML = "";
+      for (let i = 0; i < 3; i++) {
+        pieces.appendChild(createPiece());
+      }
+    }
+
+    board.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const rect = board.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / 42);
+      const y = Math.floor((e.clientY - rect.top) / 42);
+      highlightPlacement(x, y);
+    });
+
+    board.addEventListener("dragleave", () => {
+      clearHighlights();
+    });
+
+    board.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (!draggedPiece) return;
+
+      const rect = board.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / 42);
+      const y = Math.floor((e.clientY - rect.top) / 42);
+
+      if (placePiece(x, y, draggedPiece.shape, draggedPiece.dataset.color)) {
+        score += draggedPiece.shape.flat().filter(c => c).length;
+        scoreDisplay.textContent = `Score: ${score}`;
+        draggedPiece.remove();
+        if (pieces.children.length === 0) generatePieces();
+      }
+
+      clearHighlights();
+      draggedPiece = null;
+    });
+
+    function placePiece(x, y, shape, color) {
+      if (!canPlace(x, y, shape)) return false;
+      shape.forEach((row, dy) => {
+        row.forEach((cell, dx) => {
+          if (cell) {
+            const boardX = x + dx;
+            const boardY = y + dy;
+            const idx = boardY * 8 + boardX;
+            const block = board.children[idx];
+            block.style.backgroundColor = color;
+            boardState[boardY][boardX] = color;
+          }
+        });
+      });
+      return true;
+    }
+
+    function canPlace(x, y, shape) {
+      if (y + shape.length > 8 || x + shape[0].length > 8) return false;
+      return shape.every((row, dy) => row.every((cell, dx) => {
+        if (!cell) return true;
+        return boardState[y + dy][x + dx] === null;
+      }));
+    }
+
+    function highlightPlacement(x, y) {
+      clearHighlights();
+      if (!draggedPiece) return;
+      const shape = draggedPiece.shape;
+      shape.forEach((row, dy) => {
+        row.forEach((cell, dx) => {
+          if (cell && y + dy < 8 && x + dx < 8) {
+            const idx = (y + dy) * 8 + (x + dx);
+            board.children[idx].classList.add("highlight");
+          }
+        });
+      });
+    }
+
+    function clearHighlights() {
+      board.querySelectorAll(".highlight").forEach(cell =>
+        cell.classList.remove("highlight")
+      );
+    }
+
+    createBoard();
+    generatePieces();
+  </script></body>
+  </html>
