@@ -3,93 +3,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tralalero Blast!</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #2c3e50, #3498db);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      overflow: hidden;
-    }
-    h1 {
-      color: white;
-      text-shadow: 2px 2px 4px #000;
-      margin-top: 10px;
-    }
-    #score {
-      color: white;
-      margin-bottom: 10px;
-    }
-    #game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(8, 40px);
-      grid-template-rows: repeat(8, 40px);
-      gap: 2px;
-      background-color: #34495e;
-      padding: 5px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .cell {
-      width: 40px;
-      height: 40px;
-      background-color: #2c3e50;
-      border-radius: 4px;
-      transition: background 0.2s;
-    }
-    .filled {
-      background-color: #e74c3c;
-    }
-    #pieces {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-    .piece {
-      display: inline-grid;
-      gap: 2px;
-      cursor: grab;
-    }
-    .block {
-      width: 40px;
-      height: 40px;
-      background-color: #f1c40f;
-      border-radius: 4px;
-    }
-    .preview {
-      opacity: 0.5;
-    }
-    @media (max-width: 600px) {
-      #board {
-        grid-template-columns: repeat(8, 30px);
-        grid-template-rows: repeat(8, 30px);
-      }
-      .cell, .block {
-        width: 30px;
-        height: 30px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>Tralalero Blast!</h1>
-  <div id="score">Pontos: 0</div>
+  <div id="score">Score: 0</div>
   <div id="game-container">
     <div id="board"></div>
     <div id="pieces"></div>
   </div>
-  <script src="script.js"></script>
+  <div id="gameOver">Game Over</div>
+  <script src="main.js"></script>
 </body>
 </html>
